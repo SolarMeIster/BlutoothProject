@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">BlutoothProject</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="btnStart">Generate</string>
+    <string name="settings">Settings</string>
+    <string name="minValue">Минимамальный показатель давления</string>
+    <string name="maxValue">Максимальный показатель давления</string>
+    <string name="dialogText">Введите изменения:</string>
+    <string name="_0">0</string>
+    <string name="btnAccept">Accept</string>
+    <string name="btnCancel">Cancel</string>
+    <string name="MIN">20</string>
+    <string name="MAX">50</string>
+    <string name="toggleButton_on">ON</string>
+    <string name="toggleButton_off">OFF</string>
+</resources>
