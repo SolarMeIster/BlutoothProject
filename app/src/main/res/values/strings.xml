@@ -13,4 +13,6 @@
     <string name="MAX">50</string>
     <string name="toggleButton_on">ON</string>
     <string name="toggleButton_off">OFF</string>
+    <string name="error">Error</string>
+    <string name="bluetooth_scan">Bluetooth scan</string>
 </resources>

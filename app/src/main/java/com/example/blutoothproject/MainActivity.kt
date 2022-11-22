@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
-import com.example.blutoothproject.bluetoothLe.view.BleProccessingFragment
+import com.example.blutoothproject.bluetoothLe.view.BleFragment
 import com.example.blutoothproject.databinding.ActivityMainBinding
 import com.example.blutoothproject.settings.model.IOSettings
 
@@ -33,7 +33,7 @@ class MainActivity : AppCompatActivity(){
         if (savedInstanceState == null) {
             supportFragmentManager.commit {
                 setReorderingAllowed(true)
-                add<BleProccessingFragment>(R.id.container)
+                add<BleFragment>(R.id.container)
             }
         }
     }

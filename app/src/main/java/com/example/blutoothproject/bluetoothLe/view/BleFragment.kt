@@ -15,7 +15,7 @@ import com.example.blutoothproject.delete.RandDataSocket
 import com.example.blutoothproject.settings.view.SettingsFragment
 import java.util.*
 
-class BleProccessingFragment : Fragment() {
+class BleFragment : Fragment() {
 
     private lateinit var binding: FragmentMainBinding
 
@@ -39,7 +39,6 @@ class BleProccessingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val menu: MenuHost = requireActivity()
         with(binding) {
             list = mutableListOf(txFirstSensor, txSecondSensor, txThirdSensor, txFourthSensor)
 
@@ -49,27 +48,33 @@ class BleProccessingFragment : Fragment() {
                 } else timer.cancel()
 
             }
-        }
-        menu.addMenuProvider(object: MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menuInflater.inflate(R.menu.content_menu, menu)
-            }
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                when (menuItem.itemId) {
-                    R.id.contentSettings -> {
-                        parentFragmentManager.commit {
-                            setReorderingAllowed(true)
-                            addToBackStack(null)
-                            replace<SettingsFragment>(R.id.container)
-                        }
-                    }
-                    else -> {}
+            menuToolBar.addMenuProvider(object: MenuProvider {
+                override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
+                    menuInflater.inflate(R.menu.content_menu, menu)
                 }
-                return true
-            }
 
-        })
+                override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                    when (menuItem.itemId) {
+                        R.id.contentSettings -> {
+                            parentFragmentManager.commit {
+                                setReorderingAllowed(true)
+                                addToBackStack(null)
+                                replace<SettingsFragment>(R.id.container)
+                            }
+                        }
+                        R.id.contentBleScan -> {
+                            parentFragmentManager.commit {
+                                setReorderingAllowed(true)
+                                addToBackStack(null)
+                                replace<ListBleDevicesFragment>(R.id.container)
+                            }
+                        }
+                        else -> {}
+                    }
+                    return false
+                }
+            })
+        }
     }
 
     // псевдо данные, которые получаем с контроллера

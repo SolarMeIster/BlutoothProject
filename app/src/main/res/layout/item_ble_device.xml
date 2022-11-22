@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/txDeviceName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:layout_marginTop="8dp"
+        android:layout_marginStart="12dp"
+        android:textColor="@color/black"
+        tools:text="Device Name"/>
+
+    <TextView
+        android:id="@+id/txMacAddress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="15sp"
+        tools:text="Mac Address"
+        android:layout_marginTop="4dp"
+        android:layout_marginStart="12dp"
+        android:layout_marginBottom="8dp"/>
+
+</LinearLayout>
