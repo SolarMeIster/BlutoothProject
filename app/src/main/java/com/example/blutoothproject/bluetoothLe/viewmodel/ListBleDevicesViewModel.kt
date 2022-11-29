@@ -1,7 +1,6 @@
 package com.example.blutoothproject.bluetoothLe.viewmodel
 
 import android.bluetooth.BluetoothDevice
-import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanResult
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
