@@ -1,4 +1,4 @@
-package com.example.blutoothproject.bluetoothLe.viewmodel
+package com.example.blutoothproject.bluetoothLe.view
 
 import android.app.Service
 import android.content.Intent

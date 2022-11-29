@@ -49,9 +49,7 @@ class BleFragment : Fragment() {
 
             }
             menuToolBar.addMenuProvider(object: MenuProvider {
-                override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                    menuInflater.inflate(R.menu.content_menu, menu)
-                }
+                override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) { }
 
                 override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
                     when (menuItem.itemId) {
