@@ -18,9 +18,12 @@ import com.example.blutoothproject.bluetoothLe.viewmodel.ListBleDevicesViewModel
 import com.example.blutoothproject.databinding.FragmentListBleDevicesBinding
 import android.Manifest
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import androidx.core.app.ActivityCompat
 import androidx.fragment.app.viewModels
 import com.example.blutoothproject.App
+import com.example.blutoothproject.R
 import com.example.blutoothproject.bluetoothLe.ListBleDevicesAdapter
 import com.example.blutoothproject.bluetoothLe.viewmodel.ViewModelFactory
 
@@ -28,7 +31,11 @@ class ListBleDevicesFragment : Fragment() {
 
     private lateinit var binding: FragmentListBleDevicesBinding
 
-    private val listBleDevicesViewModel: ListBleDevicesViewModel by viewModels { ViewModelFactory(requireContext().applicationContext as App) }
+    private val listBleDevicesViewModel: ListBleDevicesViewModel by viewModels {
+        ViewModelFactory(
+            requireContext().applicationContext as App
+        )
+    }
 
     private val startForResult =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -37,10 +44,22 @@ class ListBleDevicesFragment : Fragment() {
             }
         }
 
+    private var isScanning = false
+        set(value) {
+            field = value
+            if (value)
+                binding.btnScanBleDevices.setImageDrawable(
+                    requireContext().getDrawable(R.drawable.ic_bluetooth_search)
+                )
+            else
+                binding.btnScanBleDevices.setImageDrawable(
+                    requireContext().getDrawable(R.drawable.ic_bluetooth)
+                )
+        }
 
     private val listBleDevicesAdapter: ListBleDevicesAdapter by lazy {
-
         ListBleDevicesAdapter() { result: ScanResult ->
+            isScanning = false
             with(result) {
                 listBleDevicesViewModel.connect(device)
             }
@@ -60,12 +79,11 @@ class ListBleDevicesFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.btnScanBleDevices.setOnClickListener {
-            if (!requireActivity().hasRequiredRunTimePermission()) {
-                requestRelevantRuntimePermissions()
-            }
-            // добавить корутины!!!
+            if (isScanning)
+                stopBleScan()
             else {
-                listBleDevicesViewModel.search()
+                Handler(Looper.getMainLooper()).postDelayed({ stopBleScan() }, SCAN_PERIOD)
+                startBleScan()
             }
         }
         listBleDevicesViewModel.listDevice.observe(viewLifecycleOwner) {
@@ -73,11 +91,28 @@ class ListBleDevicesFragment : Fragment() {
         }
     }
 
+
     override fun onResume() {
         super.onResume()
-        /*if () {
+        if (!listBleDevicesViewModel.checkBluetooth()) {
             checkBluetooth()
-        }*/
+        }
+    }
+
+    private fun startBleScan() {
+        if (!requireActivity().hasRequiredRunTimePermission()) {
+            requestRelevantRuntimePermissions()
+        }
+        // добавить корутины!!!
+        else {
+            listBleDevicesViewModel.startSearch()
+            isScanning = true
+        }
+    }
+
+    private fun stopBleScan() {
+        listBleDevicesViewModel.stopSearch()
+        isScanning = false
     }
 
     private fun requestRelevantRuntimePermissions() {
@@ -99,7 +134,7 @@ class ListBleDevicesFragment : Fragment() {
         ActivityCompat.requestPermissions(
             requireActivity(),
             arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            2
+            RUNTIME_PERMISSION_REQUEST_CODE
         )
     }
 
@@ -108,10 +143,11 @@ class ListBleDevicesFragment : Fragment() {
         ActivityCompat.requestPermissions(
             requireActivity(),
             arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT),
-            2
+            RUNTIME_PERMISSION_REQUEST_CODE
         )
     }
 
+    // проверка permissions
     private fun Context.hasPermission(permissionType: String): Boolean {
         return ContextCompat.checkSelfPermission(this, permissionType) ==
                 PackageManager.PERMISSION_GRANTED
@@ -141,4 +177,8 @@ class ListBleDevicesFragment : Fragment() {
         startForResult.launch(enableBluetooth)
     }
 
+    companion object {
+        const val SCAN_PERIOD = 10000L
+        const val RUNTIME_PERMISSION_REQUEST_CODE = 2
+    }
 }

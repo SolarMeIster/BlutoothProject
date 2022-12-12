@@ -20,9 +20,11 @@ class BleModel {
         .build()
 
     val scanResults: MutableList<ScanResult> = mutableListOf()
+    var characteristicValue = 0
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
-        val bluetoothManager = App.getInstance().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
+        val bluetoothManager =
+            App.getInstance().getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         bluetoothManager.adapter
     }
 
@@ -36,7 +38,6 @@ class BleModel {
     private val scanResultCallback = object : ScanCallback() {
 
         override fun onScanResult(callbackType: Int, result: ScanResult) {
-            super.onScanResult(callbackType, result)
             val indexQuery = scanResults.indexOfFirst { it.device.address == result.device.address }
             if (indexQuery != -1) {
                 scanResults[indexQuery] = result
@@ -58,11 +59,42 @@ class BleModel {
 
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt?, status: Int, newState: Int) {
-            super.onConnectionStateChange(gatt, status, newState)
+            val deviceAddress = gatt?.device?.address
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                if (newState == BluetoothGatt.STATE_CONNECTED) {
+                    gatt?.discoverServices()
+                } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+                    Log.i("GattCallback", "Disconnect device: $deviceAddress")
+                    gatt?.close()
+                }
+            } else {
+                Log.i("GattCallback", "Error $status encountered for device: $deviceAddress")
+                gatt?.close()
+            }
         }
 
-        override fun onServicesDiscovered(gatt: BluetoothGatt?, status: Int) {
-            super.onServicesDiscovered(gatt, status)
+        override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
+            with(gatt) {
+                if (services.isEmpty()) {
+                    Log.i(
+                        "BluetoothServices",
+                        "This device ${device.name} don't have services"
+                    )
+                    return
+                }
+                services.forEach { service ->
+                    val characteristics = service.characteristics.joinToString(
+                        separator = "\n--",
+                        prefix = "--"
+                    ) { it.uuid.toString() }
+                    Log.i(
+                        "BluetoothService",
+                        "\nService: ${service.uuid}\nCharacteristics:\n$characteristics"
+                    )
+                }
+
+            }
+
         }
 
         override fun onCharacteristicChanged(
@@ -70,18 +102,31 @@ class BleModel {
             characteristic: BluetoothGattCharacteristic,
             value: ByteArray
         ) {
-            super.onCharacteristicChanged(gatt, characteristic, value)
+            val characteristicByteArray = value.copyOf()
+            characteristicValue = characteristicByteArray[1].toInt()
+            Log.i(
+                "onCharacteristicChanged",
+                "Device ${gatt.device.name}, Characteristic: ${characteristic.uuid}, Value: ${characteristicByteArray[1]}"
+            )
         }
     }
 
-    fun searchDevices() {
+    // старт сканирования устройств
+    fun startSearchDevices() {
         bleScanner.startScan(listOf<ScanFilter>(bleFilter), scanSetting, scanResultCallback)
     }
 
+    // стоп сканирования устройств
+    fun stopSearchDevices() {
+        bleScanner.stopScan(scanResultCallback)
+    }
 
+    // проверка на включенный bluetooth
+    fun check(): Boolean = bluetoothAdapter.isEnabled
 
+    // подключение к устройству
     fun connectToDevice(scanResultDevice: BluetoothDevice) {
-        //scanResultDevice.connectGatt()
+        scanResultDevice.connectGatt(App.getInstance(), false, gattCallback)
     }
 
     fun addListener(listener: ScanResultsListener) {

@@ -11,8 +11,10 @@ import com.example.blutoothproject.bluetoothLe.model.ScanResultsListener
 class ListBleDevicesViewModel(private val bleModel: BleModel) : ViewModel() {
 
     private val _listDevice = MutableLiveData<List<ScanResult>>()
-
     val listDevice: LiveData<List<ScanResult>> = _listDevice
+
+    private val _characteristicValue = MutableLiveData<Int>()
+    val characteristicValue: LiveData<Int> = _characteristicValue
 
     private val listener: ScanResultsListener = {
         _listDevice.value = it
@@ -22,16 +24,18 @@ class ListBleDevicesViewModel(private val bleModel: BleModel) : ViewModel() {
         bleModel.addListener(listener)
     }
 
-    fun checkBluetooth() {
-        //bleModel.check()
-    }
+    fun checkBluetooth() = bleModel.check()
 
     fun connect(scanResultDevice: BluetoothDevice) {
         bleModel.connectToDevice(scanResultDevice)
     }
 
-    fun search() {
-        bleModel.searchDevices()
+    fun startSearch() {
+        bleModel.startSearchDevices()
+    }
+
+    fun stopSearch() {
+        bleModel.stopSearchDevices()
     }
 
     override fun onCleared() {
