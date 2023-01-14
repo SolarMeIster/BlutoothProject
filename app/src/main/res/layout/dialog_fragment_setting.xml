@@ -25,22 +25,13 @@
         android:layout_gravity="center"
         android:autofillHints="pressure"
         android:inputType="number"
-        android:text="@string/_0"
+        android:hint="@string/_0"
+        android:contentDescription="@string/error"
         android:textColor="@color/grey"
         android:textSize="36sp"
-        app:layout_constraintEnd_toStartOf="@+id/btnDialogCancel"
-        app:layout_constraintStart_toEndOf="@+id/btnDialogAccept"
+        app:layout_constraintEnd_toStartOf="@+id/btnDialogAccept"
+        app:layout_constraintStart_toEndOf="@+id/btnDialogCancel"
         app:layout_constraintTop_toBottomOf="@+id/textView3" />
-
-    <Button
-        android:id="@+id/btnDialogAccept"
-        style="?android:attr/buttonBarButtonStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/btnAccept"
-        app:layout_constraintEnd_toStartOf="@+id/textView3"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editText" />
 
     <Button
         android:id="@+id/btnDialogCancel"
@@ -48,8 +39,20 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/btnCancel"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/textView3"
+        app:layout_constraintTop_toBottomOf="@+id/editText" />
+
+    <Button
+        android:id="@+id/btnDialogAccept"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/btnAccept"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@+id/textView3"
         app:layout_constraintTop_toBottomOf="@+id/editText" />
+
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>

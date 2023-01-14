@@ -33,6 +33,9 @@ class SettingsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         with(binding) {
+            toolbarSettings.setNavigationOnClickListener {
+                requireActivity().onBackPressedDispatcher.onBackPressed()
+            }
 
             maxValue.text = allValueOfSettings[MAX].toString()
             minValue.text = allValueOfSettings[MIN].toString()
@@ -46,7 +49,6 @@ class SettingsFragment : Fragment() {
         }
 
     }
-
 
     // выполнение DialogFragment
     private fun performDialog(textView: TextView, key: String) {

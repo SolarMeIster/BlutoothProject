@@ -5,20 +5,32 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/menuToolBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:title="@string/app_name"
+        app:titleTextColor="@color/emerald_color"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:menu="@menu/content_menu" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewOfBleDevices"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
         tools:listitem="@layout/item_ble_device"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/menuToolBar" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnScanBleDevices"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:background="@color/emerald_color"
         android:contentDescription="@string/error"
         android:src="@drawable/ic_bluetooth"
         app:layout_constraintBottom_toBottomOf="parent"

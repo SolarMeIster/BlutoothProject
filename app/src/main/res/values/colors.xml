@@ -8,4 +8,5 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="grey">#999999</color>
+    <color name="emerald_color">#FF008577</color>
 </resources>

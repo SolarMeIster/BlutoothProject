@@ -6,6 +6,16 @@
     android:layout_height="match_parent"
     tools:context=".settings.view.SettingsFragment">
 
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbarSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:navigationIcon="@drawable/ic_back_arrow"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+
     <TextView
         android:id="@+id/textView"
         style="?android:attr/buttonBarButtonStyle"

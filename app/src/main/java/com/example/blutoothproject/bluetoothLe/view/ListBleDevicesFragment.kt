@@ -7,9 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -20,12 +17,17 @@ import android.Manifest
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import androidx.core.app.ActivityCompat
+import android.view.*
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.view.MenuProvider
+import androidx.fragment.app.commit
+import androidx.fragment.app.replace
 import androidx.fragment.app.viewModels
 import com.example.blutoothproject.App
 import com.example.blutoothproject.R
 import com.example.blutoothproject.bluetoothLe.ListBleDevicesAdapter
 import com.example.blutoothproject.bluetoothLe.viewmodel.ViewModelFactory
+import com.example.blutoothproject.settings.view.SettingsFragment
 
 class ListBleDevicesFragment : Fragment() {
 
@@ -44,21 +46,32 @@ class ListBleDevicesFragment : Fragment() {
             }
         }
 
+    private val requestPermissionGranted =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val granted = permissions.entries.all {
+                it.value
+            }
+            if (granted) startBleScan()
+        }
+
     private var isScanning = false
         set(value) {
             field = value
             if (value)
                 binding.btnScanBleDevices.setImageDrawable(
-                    requireContext().getDrawable(R.drawable.ic_bluetooth_search)
+                    AppCompatResources.getDrawable(
+                        requireActivity(),
+                        R.drawable.ic_bluetooth_search
+                    )
                 )
             else
                 binding.btnScanBleDevices.setImageDrawable(
-                    requireContext().getDrawable(R.drawable.ic_bluetooth)
+                    AppCompatResources.getDrawable(requireActivity(), R.drawable.ic_bluetooth)
                 )
         }
 
     private val listBleDevicesAdapter: ListBleDevicesAdapter by lazy {
-        ListBleDevicesAdapter() { result: ScanResult ->
+        ListBleDevicesAdapter { result: ScanResult ->
             isScanning = false
             with(result) {
                 listBleDevicesViewModel.connect(device)
@@ -76,7 +89,6 @@ class ListBleDevicesFragment : Fragment() {
         return binding.root
     }
 
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         binding.btnScanBleDevices.setOnClickListener {
             if (isScanning)
@@ -89,6 +101,32 @@ class ListBleDevicesFragment : Fragment() {
         listBleDevicesViewModel.listDevice.observe(viewLifecycleOwner) {
             listBleDevicesAdapter.data = it
         }
+        with(binding.menuToolBar) {
+            addMenuProvider(object : MenuProvider {
+                override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
+
+                override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                    when (menuItem.itemId) {
+                        R.id.contentSettings -> {
+                            parentFragmentManager.commit {
+                                setReorderingAllowed(true)
+                                addToBackStack(null)
+                                replace<SettingsFragment>(R.id.container)
+                            }
+                        }
+                        R.id.contentBleScan -> {
+                            parentFragmentManager.commit {
+                                setReorderingAllowed(true)
+                                addToBackStack(null)
+                                replace<BleFragment>(R.id.container)
+                            }
+                        }
+                        else -> throw IllegalStateException("Error")
+                    }
+                    return false
+                }
+            })
+        }
     }
 
 
@@ -99,6 +137,7 @@ class ListBleDevicesFragment : Fragment() {
         }
     }
 
+    // старт сканирования
     private fun startBleScan() {
         if (!requireActivity().hasRequiredRunTimePermission()) {
             requestRelevantRuntimePermissions()
@@ -110,41 +149,31 @@ class ListBleDevicesFragment : Fragment() {
         }
     }
 
+    // остоновка сканирования
     private fun stopBleScan() {
         listBleDevicesViewModel.stopSearch()
         isScanning = false
     }
 
+    // проверяет версию Android и запрашивает необходимые permissions
     private fun requestRelevantRuntimePermissions() {
         if (requireActivity().hasRequiredRunTimePermission()) {
             return
         }
         when {
             Build.VERSION.SDK_INT < Build.VERSION_CODES.S -> {
-                requiredLocationPermission()
+                // доступ к местоположению
+                requestPermissionGranted.launch(
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
+                )
             }
             Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-                requiredBluetoothPermission()
+                // доступ к сканированию и подключению Bluetooth
+                requestPermissionGranted.launch(
+                    arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
+                )
             }
         }
-    }
-
-    // доступ к местоположению
-    private fun requiredLocationPermission() {
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-            RUNTIME_PERMISSION_REQUEST_CODE
-        )
-    }
-
-    // доступ к сканированию и подключению Bluetooth
-    private fun requiredBluetoothPermission() {
-        ActivityCompat.requestPermissions(
-            requireActivity(),
-            arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT),
-            RUNTIME_PERMISSION_REQUEST_CODE
-        )
     }
 
     // проверка permissions

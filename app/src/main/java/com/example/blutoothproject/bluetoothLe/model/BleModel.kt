@@ -1,5 +1,6 @@
 package com.example.blutoothproject.bluetoothLe.model
 
+import android.annotation.SuppressLint
 import android.bluetooth.*
 import android.bluetooth.le.ScanCallback
 import android.bluetooth.le.ScanFilter
@@ -8,18 +9,16 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.util.Log
 import com.example.blutoothproject.App
+import com.example.blutoothproject.Observable
 
-typealias ScanResultsListener = (result: List<ScanResult>) -> Unit
-
-class BleModel {
-
-    private val listeners = mutableSetOf<ScanResultsListener>()
+@SuppressLint("MissingPermission")
+class BleModel : Observable() {
 
     private val scanSetting = ScanSettings.Builder()
         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
         .build()
 
-    val scanResults: MutableList<ScanResult> = mutableListOf()
+    val scanResults: MutableList<ScanResult> = mutableListOf() // данные по устройствам (идут в ListBleDevicesFragment)
     var characteristicValue = 0
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
@@ -104,6 +103,7 @@ class BleModel {
         ) {
             val characteristicByteArray = value.copyOf()
             characteristicValue = characteristicByteArray[1].toInt()
+            notifyChanged()
             Log.i(
                 "onCharacteristicChanged",
                 "Device ${gatt.device.name}, Characteristic: ${characteristic.uuid}, Value: ${characteristicByteArray[1]}"
@@ -127,19 +127,6 @@ class BleModel {
     // подключение к устройству
     fun connectToDevice(scanResultDevice: BluetoothDevice) {
         scanResultDevice.connectGatt(App.getInstance(), false, gattCallback)
-    }
-
-    fun addListener(listener: ScanResultsListener) {
-        listeners.add(listener)
-        listener.invoke(scanResults)
-    }
-
-    fun removeListener(listener: ScanResultsListener) {
-        listeners.remove(listener)
-    }
-
-    private fun notifyChanged() {
-        listeners.forEach { it.invoke(scanResults) }
     }
 
     companion object {

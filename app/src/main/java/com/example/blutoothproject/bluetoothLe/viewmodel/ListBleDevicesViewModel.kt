@@ -5,23 +5,16 @@ import android.bluetooth.le.ScanResult
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.blutoothproject.IObserver
 import com.example.blutoothproject.bluetoothLe.model.BleModel
-import com.example.blutoothproject.bluetoothLe.model.ScanResultsListener
 
-class ListBleDevicesViewModel(private val bleModel: BleModel) : ViewModel() {
+class ListBleDevicesViewModel(private val bleModel: BleModel) : ViewModel(), IObserver {
 
     private val _listDevice = MutableLiveData<List<ScanResult>>()
     val listDevice: LiveData<List<ScanResult>> = _listDevice
 
-    private val _characteristicValue = MutableLiveData<Int>()
-    val characteristicValue: LiveData<Int> = _characteristicValue
-
-    private val listener: ScanResultsListener = {
-        _listDevice.value = it
-    }
-
     init {
-        bleModel.addListener(listener)
+        bleModel.addListener(this)
     }
 
     fun checkBluetooth() = bleModel.check()
@@ -40,8 +33,10 @@ class ListBleDevicesViewModel(private val bleModel: BleModel) : ViewModel() {
 
     override fun onCleared() {
         super.onCleared()
-        bleModel.removeListener(listener)
+        bleModel.removeListener(this)
     }
 
-
+    override fun update() {
+        _listDevice.value = bleModel.scanResults
+    }
 }

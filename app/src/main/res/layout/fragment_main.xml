@@ -7,13 +7,13 @@
     tools:context=".bluetoothLe.view.BleFragment">
 
     <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/menuToolBar"
+        android:id="@+id/toolbarData"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        app:navigationIcon="@drawable/ic_back_arrow"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:menu="@menu/content_menu"/>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
     <LinearLayout
         android:id="@+id/linearField"
@@ -55,18 +55,10 @@
 
     </LinearLayout>
 
-   <!-- <Button
-        android:id="@+id/btnStart"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/btnStart"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/linearField"/>-->
 
     <ToggleButton
         android:id="@+id/toggleButton"
+        style="?android:attr/buttonStyleToggle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textOn="@string/toggleButton_on"
