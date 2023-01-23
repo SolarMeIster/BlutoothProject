@@ -18,7 +18,7 @@ class BleFragmentViewModel(private val bleModel: BleModel) : ViewModel(), IObser
     }
 
     override fun update() {
-        _characteristicValue.value = bleModel.characteristicValue
+        _characteristicValue.postValue(bleModel.characteristicValue)
     }
 
     fun exceedPressure(): Boolean {

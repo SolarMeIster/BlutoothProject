@@ -37,6 +37,6 @@ class ListBleDevicesViewModel(private val bleModel: BleModel) : ViewModel(), IOb
     }
 
     override fun update() {
-        _listDevice.value = bleModel.scanResults
+        _listDevice.postValue(bleModel.scanResults)
     }
 }

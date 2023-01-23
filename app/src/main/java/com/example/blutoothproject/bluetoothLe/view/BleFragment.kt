@@ -21,7 +21,7 @@ class BleFragment : Fragment() {
     }
 
     private lateinit var binding: FragmentMainBinding
-    private var characteristicValue by Delegates.notNull<Int>()
+    private var characteristicValue = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -29,7 +29,7 @@ class BleFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         bleFragmentViewModel.characteristicValue.observe(viewLifecycleOwner) {
-            characteristicValue = it
+            binding.txFirstSensor.text = it.toString()
         }
         binding = FragmentMainBinding.inflate(inflater, container, false)
         return binding.root
@@ -45,7 +45,6 @@ class BleFragment : Fragment() {
             toolbarData.setNavigationOnClickListener {
                 requireActivity().onBackPressedDispatcher.onBackPressed()
             }
-            txFirstSensor.text = characteristicValue.toString()
         }
 
         if (Build.VERSION_CODES.S <= Build.VERSION.SDK_INT && bleFragmentViewModel.exceedPressure()) {

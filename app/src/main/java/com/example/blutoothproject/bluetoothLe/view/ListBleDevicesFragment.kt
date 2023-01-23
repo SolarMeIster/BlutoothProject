@@ -75,6 +75,11 @@ class ListBleDevicesFragment : Fragment() {
             isScanning = false
             with(result) {
                 listBleDevicesViewModel.connect(device)
+                parentFragmentManager.commit {
+                    setReorderingAllowed(true)
+                    addToBackStack(null)
+                    replace<BleFragment>(R.id.container)
+                }
             }
         }
     }

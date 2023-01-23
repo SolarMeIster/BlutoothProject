@@ -10,6 +10,7 @@ import android.content.Context
 import android.util.Log
 import com.example.blutoothproject.App
 import com.example.blutoothproject.Observable
+import java.util.*
 
 @SuppressLint("MissingPermission")
 class BleModel : Observable() {
@@ -90,25 +91,59 @@ class BleModel : Observable() {
                         "BluetoothService",
                         "\nService: ${service.uuid}\nCharacteristics:\n$characteristics"
                     )
-                }
 
+                    service.characteristics.forEach { characteristic ->
+                        if (characteristic.uuid == UUID.fromString(USER_UUID)) {
+                            enableNotification(characteristic, gatt)
+                        }
+                    }
+                }
             }
 
         }
 
         override fun onCharacteristicChanged(
-            gatt: BluetoothGatt,
-            characteristic: BluetoothGattCharacteristic,
-            value: ByteArray
+            gatt: BluetoothGatt?,
+            characteristic: BluetoothGattCharacteristic
         ) {
-            val characteristicByteArray = value.copyOf()
+            val characteristicByteArray = characteristic.value.copyOf()
             characteristicValue = characteristicByteArray[1].toInt()
             notifyChanged()
             Log.i(
                 "onCharacteristicChanged",
-                "Device ${gatt.device.name}, Characteristic: ${characteristic.uuid}, Value: ${characteristicByteArray[1]}"
+                "Device ${gatt?.device?.name}, Characteristic: ${characteristic.uuid}, Value: ${characteristicByteArray[1]}"
             )
         }
+    }
+
+    private fun enableNotification(characteristic: BluetoothGattCharacteristic, gatt: BluetoothGatt?) {
+        val cccUUID = UUID.fromString(USER_DESCRIPTOR_UUID)
+        val payload = when {
+            characteristic.isIndictable() -> BluetoothGattDescriptor.ENABLE_INDICATION_VALUE
+            characteristic.isNotifiable() -> BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+            else -> {
+                Log.i("Notification", "Error")
+                return
+            }
+        }
+        characteristic.getDescriptor(cccUUID).let { cccDescriptor ->
+            if (gatt?.setCharacteristicNotification(characteristic, true) == false) {
+                Log.e("Notification", "Error descriptor")
+                return
+            }
+            cccDescriptor.value = payload
+            gatt?.writeDescriptor(cccDescriptor) ?: Log.e("Notification", "Not contain cccUUID")
+        }
+    }
+
+    private fun BluetoothGattCharacteristic.isNotifiable(): Boolean =
+        containsProperty(BluetoothGattCharacteristic.PROPERTY_NOTIFY)
+
+    private fun BluetoothGattCharacteristic.isIndictable(): Boolean =
+        containsProperty(BluetoothGattCharacteristic.PROPERTY_INDICATE)
+
+    private fun BluetoothGattCharacteristic.containsProperty(property: Int): Boolean {
+        return properties and property != 0
     }
 
     // старт сканирования устройств
@@ -126,10 +161,12 @@ class BleModel : Observable() {
 
     // подключение к устройству
     fun connectToDevice(scanResultDevice: BluetoothDevice) {
-        scanResultDevice.connectGatt(App.getInstance(), false, gattCallback)
+        scanResultDevice.connectGatt(App.getInstance(), true, gattCallback)
     }
 
     companion object {
         const val SCAN_ERROR = "SCAN ERROR"
+        const val USER_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805f9b34fb"
+        const val USER_UUID = "00002a37-0000-1000-8000-00805f9b34fb"
     }
 }
