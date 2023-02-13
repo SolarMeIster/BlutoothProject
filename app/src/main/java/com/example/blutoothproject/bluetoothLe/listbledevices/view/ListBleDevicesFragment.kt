@@ -1,4 +1,4 @@
-package com.example.blutoothproject.bluetoothLe.view
+package com.example.blutoothproject.bluetoothLe.listbledevices.view
 
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
@@ -11,7 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.blutoothproject.bluetoothLe.viewmodel.ListBleDevicesViewModel
 import com.example.blutoothproject.databinding.FragmentListBleDevicesBinding
 import android.Manifest
 import android.os.Build
@@ -25,8 +24,10 @@ import androidx.fragment.app.replace
 import androidx.fragment.app.viewModels
 import com.example.blutoothproject.App
 import com.example.blutoothproject.R
-import com.example.blutoothproject.bluetoothLe.ListBleDevicesAdapter
-import com.example.blutoothproject.bluetoothLe.viewmodel.ViewModelFactory
+import com.example.blutoothproject.bluetoothLe.listbledevices.ListBleDevicesAdapter
+import com.example.blutoothproject.bluetoothLe.listbledevices.viewmodel.ListBleDevicesViewModel
+import com.example.blutoothproject.bluetoothLe.bledata.view.BleDataFragment
+import com.example.blutoothproject.ViewModelFactory
 import com.example.blutoothproject.settings.view.SettingsFragment
 
 class ListBleDevicesFragment : Fragment() {
@@ -78,7 +79,7 @@ class ListBleDevicesFragment : Fragment() {
                 parentFragmentManager.commit {
                     setReorderingAllowed(true)
                     addToBackStack(null)
-                    replace<BleFragment>(R.id.container)
+                    replace<BleDataFragment>(R.id.container)
                 }
             }
         }
@@ -123,7 +124,7 @@ class ListBleDevicesFragment : Fragment() {
                             parentFragmentManager.commit {
                                 setReorderingAllowed(true)
                                 addToBackStack(null)
-                                replace<BleFragment>(R.id.container)
+                                replace<BleDataFragment>(R.id.container)
                             }
                         }
                         else -> throw IllegalStateException("Error")
@@ -213,6 +214,5 @@ class ListBleDevicesFragment : Fragment() {
 
     companion object {
         const val SCAN_PERIOD = 10000L
-        const val RUNTIME_PERMISSION_REQUEST_CODE = 2
     }
 }

@@ -1,4 +1,4 @@
-package com.example.blutoothproject.bluetoothLe.view
+package com.example.blutoothproject.bluetoothLe.bledata.view
 
 import android.content.Context
 import android.os.*
@@ -6,32 +6,37 @@ import android.view.*
 import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.blutoothproject.*
-import com.example.blutoothproject.bluetoothLe.viewmodel.BleFragmentViewModel
-import com.example.blutoothproject.bluetoothLe.viewmodel.ViewModelFactory
-import com.example.blutoothproject.databinding.FragmentMainBinding
-import kotlin.properties.Delegates
+import com.example.blutoothproject.bluetoothLe.BleDataAdapter
+import com.example.blutoothproject.ViewModelFactory
+import com.example.blutoothproject.bluetoothLe.bledata.viewmodel.BleDataViewModel
+import com.example.blutoothproject.databinding.FragmentBleDataBinding
 
-class BleFragment : Fragment() {
+class BleDataFragment : Fragment() {
 
-    private val bleFragmentViewModel: BleFragmentViewModel by viewModels {
+    private val bleDataViewModel: BleDataViewModel by viewModels {
         ViewModelFactory(
             requireContext().applicationContext as App
         )
     }
 
-    private lateinit var binding: FragmentMainBinding
-    private var characteristicValue = 0
+    private val bleDataAdapter: BleDataAdapter by lazy {
+        BleDataAdapter()
+    }
+
+    private lateinit var binding: FragmentBleDataBinding
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        bleFragmentViewModel.characteristicValue.observe(viewLifecycleOwner) {
-            binding.txFirstSensor.text = it.toString()
+        bleDataViewModel.characteristicValue.observe(viewLifecycleOwner) { result ->
+            bleDataAdapter.data = result.toList()
         }
-        binding = FragmentMainBinding.inflate(inflater, container, false)
+        binding = FragmentBleDataBinding.inflate(inflater, container, false)
+        setupRecyclerView()
         return binding.root
     }
 
@@ -47,7 +52,7 @@ class BleFragment : Fragment() {
             }
         }
 
-        if (Build.VERSION_CODES.S <= Build.VERSION.SDK_INT && bleFragmentViewModel.exceedPressure()) {
+        /*if (Build.VERSION_CODES.S <= Build.VERSION.SDK_INT && bleDataFragmentViewModel.exceedPressure()) {
             vibrator.vibrate(
                 CombinedVibration.createParallel(
                     VibrationEffect.createOneShot(
@@ -56,8 +61,16 @@ class BleFragment : Fragment() {
                     )
                 )
             )
+        }*/
+    }
+
+    private fun setupRecyclerView() {
+        with(binding) {
+            recyclerViewOfBleDeviceData.layoutManager = LinearLayoutManager(requireContext())
+            recyclerViewOfBleDeviceData.adapter = bleDataAdapter
         }
     }
+
 
 }
 

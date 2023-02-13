@@ -9,18 +9,23 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import androidx.fragment.app.viewModels
+import com.example.blutoothproject.App
 import com.example.blutoothproject.R
+import com.example.blutoothproject.ViewModelFactory
 import com.example.blutoothproject.allValueOfSettings
 import com.example.blutoothproject.databinding.FragmentSettingsBinding
-import com.example.blutoothproject.settings.model.IOSettings
+import com.example.blutoothproject.settings.viewmodel.SettingViewModel
 
 class SettingsFragment : Fragment() {
 
     private lateinit var binding: FragmentSettingsBinding
 
-    private lateinit var btnDialogAccept: Button
-    private lateinit var btnDialogCancel: Button
-    private lateinit var editText: EditText
+    private val settingViewModel: SettingViewModel by viewModels {
+        ViewModelFactory(
+            requireContext().applicationContext as App
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -52,20 +57,20 @@ class SettingsFragment : Fragment() {
 
     // выполнение DialogFragment
     private fun performDialog(textView: TextView, key: String) {
-        val myDialogFragment = LayoutInflater.from(requireActivity()).inflate(R.layout.dialog_fragment_setting, null)
+        val myDialogFragment =
+            LayoutInflater.from(requireActivity()).inflate(R.layout.dialog_fragment_setting, null)
         val myBuilder = AlertDialog.Builder(requireActivity())
             .setView(myDialogFragment)
         val myAlertDialog = myBuilder.show()
-        btnDialogAccept = myDialogFragment.findViewById(R.id.btnDialogAccept)
-        btnDialogCancel = myDialogFragment.findViewById(R.id.btnDialogCancel)
-        editText = myDialogFragment.findViewById(R.id.editText)
+        val btnDialogAccept = myDialogFragment.findViewById<Button>(R.id.btnDialogAccept)
+        val btnDialogCancel = myDialogFragment.findViewById<Button>(R.id.btnDialogCancel)
+        val editText = myDialogFragment.findViewById<EditText>(R.id.editText)
         btnDialogAccept.setOnClickListener {
             val valuePressure = editText.text.toString()
             myAlertDialog.dismiss()
             textView.text = valuePressure
-            val config = IOSettings()
-            config.saveData(requireContext(), valuePressure, key)
-            allValueOfSettings = config.getData(requireContext())
+            settingViewModel.saveData(requireContext(), valuePressure, key)
+            allValueOfSettings = settingViewModel.getData(requireContext())
         }
         btnDialogCancel.setOnClickListener {
             myAlertDialog.dismiss()
@@ -77,3 +82,4 @@ class SettingsFragment : Fragment() {
         const val MIN = "minValueOfPressure"
     }
 }
+

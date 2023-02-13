@@ -1,4 +1,4 @@
-package com.example.blutoothproject.bluetoothLe.viewmodel
+package com.example.blutoothproject.bluetoothLe.listbledevices.viewmodel
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.ScanResult

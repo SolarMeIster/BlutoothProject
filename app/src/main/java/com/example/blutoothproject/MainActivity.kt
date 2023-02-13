@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
-import com.example.blutoothproject.bluetoothLe.view.ListBleDevicesFragment
+import com.example.blutoothproject.bluetoothLe.listbledevices.view.ListBleDevicesFragment
 import com.example.blutoothproject.databinding.ActivityMainBinding
 import com.example.blutoothproject.settings.model.IOSettings
 

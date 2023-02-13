@@ -1,4 +1,4 @@
-package com.example.blutoothproject.bluetoothLe
+package com.example.blutoothproject.bluetoothLe.listbledevices
 
 import android.annotation.SuppressLint
 import android.bluetooth.le.ScanResult
