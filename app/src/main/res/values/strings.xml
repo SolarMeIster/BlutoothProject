@@ -16,4 +16,6 @@
     <string name="bluetooth_scan">Данные</string>
     <string name="colon">:</string>
     <string name="info">Информация</string>
+    <string name="checkControllers">Проверка порядка контроллеров</string>
+    <string name="disconnect_device">Отлключить устройство</string>
 </resources>

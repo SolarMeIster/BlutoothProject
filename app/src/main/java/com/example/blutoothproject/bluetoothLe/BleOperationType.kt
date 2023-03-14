@@ -19,3 +19,6 @@ data class EnableNotification(override val device: BluetoothDevice, val characte
 
 // отключение уведомлений от ble устройства
 data class DisableNotification(override val device: BluetoothDevice, val characteristic: BluetoothGattCharacteristic) : BleOperationType()
+
+// запись данных в ble устройство
+data class WriteChar(override val device: BluetoothDevice, val characteristic: BluetoothGattCharacteristic): BleOperationType()

@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.*
 import android.view.*
 import androidx.annotation.RequiresApi
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -50,6 +51,22 @@ class BleDataFragment : Fragment() {
             toolbarData.setNavigationOnClickListener {
                 requireActivity().onBackPressedDispatcher.onBackPressed()
             }
+            toolbarData.addMenuProvider(object : MenuProvider {
+                override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
+
+                override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
+                   when(menuItem.itemId) {
+                       R.id.ledCheck -> {
+                           bleDataViewModel.writeChar()
+                       }
+                       R.id.bluetoothDisconnect -> {
+
+                       }
+                   }
+                    return true
+                }
+
+            })
         }
 
         /*if (Build.VERSION_CODES.S <= Build.VERSION.SDK_INT && bleDataFragmentViewModel.exceedPressure()) {
@@ -72,31 +89,6 @@ class BleDataFragment : Fragment() {
     }
 
 
+
+
 }
-
-/*// псевдо данные, которые получаем с контроллера
-private fun sendPressure() {
-    timer = Timer("Pressure")
-    timer.scheduleAtFixedRate(RandTimerTask(), DELAY_TIMER, PERIOD_TIMER)
-}*/
-
-/* inner class RandTimerTask : TimerTask() {
-     override fun run() {
-         listPressure = randDataSocket.getPressure()
-         activity?.runOnUiThread {
-             for (i in list.indices) {
-                 if (listPressure[i] !in allValueOfSettings[SettingsFragment.MIN].toString()
-                         .toInt()
-                     ..allValueOfSettings[SettingsFragment.MAX].toString().toInt()
-                 ) {
-                     Toast.makeText(
-                         requireContext(),
-                         "Превышен предел давления",
-                         Toast.LENGTH_SHORT
-                     ).show()
-                 }
-                 list[i].text = listPressure[i].toString()
-             }
-         }
-     }
- }*/

@@ -10,14 +10,14 @@ class BleDataAdapter : RecyclerView.Adapter<BleDataAdapter.ViewHolder>() {
 
     private lateinit var binding: ItemDataRecordBinding
 
-    var data = emptyList<Pair<String, Int>>()
+    var data = emptyList<Pair<String, Float>>()
         set(newField) {
             field = newField
             notifyDataSetChanged()
         }
 
     class ViewHolder(private val binding: ItemDataRecordBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(data: Pair<String, Int>) {
+        fun bind(data: Pair<String, Float>) {
             with(binding) {
                 txDeviceNameData.text = data.first
                 txData.text = data.second.toString()

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/ledCheck"
+        android:title="@string/checkControllers"
+        android:icon="@drawable/led"
+        app:showAsAction="ifRoom"/>
+    <item
+        android:id="@+id/bluetoothDisconnect"
+        android:title="@string/disconnect_device"
+        android:icon="@drawable/ic_baseline_bluetooth_disabled_24"
+        app:showAsAction="ifRoom"/>
+</menu>

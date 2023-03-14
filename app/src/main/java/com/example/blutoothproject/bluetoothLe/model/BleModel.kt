@@ -28,7 +28,7 @@ class BleModel : Observable() {
     val scanResults: MutableList<ScanResult> =
         mutableListOf() // данные по устройствам (идут в ListBleDevicesFragment)
     var characteristicValues =
-        mutableMapOf<String, Int>() // данные по значениям давления подключенных устройств (идут в BleDataFragment)
+        mutableMapOf<String, Float>() // данные по значениям давления подключенных устройств (идут в BleDataFragment)
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager =
@@ -53,7 +53,7 @@ class BleModel : Observable() {
             } else {
                 Log.i(
                     "ScanCallback",
-                    "Found BLE device! Name: ${result.device.name ?: "Unnamed"}, address: ${result.device.address}"
+                    "Found BLE device! Name: ${result.device.name ?: "Unnamed"}, address: ${result.device.address}, dbm: ${result.rssi}"
                 )
                 scanResults.add(result)
             }
@@ -125,6 +125,8 @@ class BleModel : Observable() {
                     service.characteristics.forEach { characteristic ->
                         if (characteristic.uuid == UUID.fromString(USER_UUID_STM) || characteristic.uuid == UUID.fromString(
                                 USER_UUID_TEXAS
+                            ) || characteristic.uuid == UUID.fromString(USER_UUID_P2P) || characteristic.uuid == UUID.fromString(
+                                PRESSURE_UUID
                             )
                         ) {
                             enableNotification(characteristic, gatt)
@@ -135,18 +137,18 @@ class BleModel : Observable() {
             }
         }
 
-        // колбэк, котрый срабатывает после получения доступа из метода enableNotification
+        // callback, котрый срабатывает после получения доступа из метода enableNotification
         override fun onCharacteristicChanged(
             gatt: BluetoothGatt?,
             characteristic: BluetoothGattCharacteristic
         ) {
             if (gatt != null) {
                 when (gatt.device?.name) {
-                    "HRSTM" -> {
-                        changeVisualisationData(gatt, characteristic, 1)
-                    }
                     "SimpleBLEPeripheral" -> {
-                        changeVisualisationData(gatt, characteristic, 0)
+                        changeVisualisationData(gatt, characteristic)
+                    }
+                    else -> {
+                        changeVisualisationData(gatt, characteristic)
                     }
                 }
             }
@@ -156,13 +158,17 @@ class BleModel : Observable() {
     private fun changeVisualisationData(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,
-        index: Int
     ) {
         val characteristicByteArray = characteristic.value.copyOf()
-        characteristicValues[gatt.device.name] = characteristicByteArray[index].toInt()
+        val temperature = if (characteristicByteArray.size >= 2) {
+            (characteristicByteArray[3].toInt() shl 8) + characteristicByteArray[2]
+        } else {
+            characteristicByteArray[0].toInt()
+        }
+        characteristicValues[gatt.device.name] = (temperature).toFloat()
         Log.i(
             "onCharacteristicChanged",
-            "Device ${gatt.device.name}, Characteristic: ${characteristic.uuid}, Value: ${characteristicByteArray[index]}"
+            "Device ${gatt.device.name}, Characteristic: ${characteristic.uuid}, Value: $temperature"
         )
         notifyChanged()
     }
@@ -236,6 +242,23 @@ class BleModel : Observable() {
         }
     }
 
+    // запись данных в контроллер (в данном случае включает на 1с светодиод)
+    fun writeCharacteristic() {
+        if (gattDevices.isNotEmpty()) {
+            for (element in gattDevices) {
+                element.value.services.forEach { service ->
+                    service.characteristics.forEach { characteristic ->
+                        if (characteristic.uuid == UUID.fromString(LED_UUID) && (characteristic.isWritable() || characteristic.isWritableWithoutResponse())) {
+                            addToQueue(WriteChar(element.key, characteristic))
+                        }
+                    }
+                }
+            }
+        } else {
+            Log.e("WriteCharacteristic", "No connected devices")
+        }
+    }
+
     @Synchronized
     private fun addToQueue(operation: BleOperationType) {
         operationsQueue.add(operation)
@@ -298,7 +321,7 @@ class BleModel : Observable() {
                         Log.i("EnableNotification", "Device: $device is enabled notification")
                         cccDescriptor.value = payload
                         gatt.writeDescriptor(cccDescriptor)
-                        characteristicValues[gatt.device.name] = 0
+                        characteristicValues[gatt.device.name] = 0f
                         endOfOperation()
                     }
                 }
@@ -318,6 +341,24 @@ class BleModel : Observable() {
                     }
                 }
             }
+            is WriteChar -> {
+                with(operation) {
+                    val writeType = when {
+                        characteristic.isWritable() -> BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+                        characteristic.isWritableWithoutResponse() -> BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE
+                        else -> {
+                            Log.e("WriteCharacteristic", "Error with writing of characteristic")
+                            return
+                        }
+                    }
+                    gatt.let {
+                        characteristic.writeType = writeType
+                        characteristic.value = byteArrayOf(1) // данные, которые отправляются на контроллер и включает LED
+                        it.writeCharacteristic(characteristic)
+                    }
+                    endOfOperation()
+                }
+            }
             else -> {
                 endOfOperation()
                 return
@@ -325,11 +366,20 @@ class BleModel : Observable() {
         }
     }
 
+    /**
+     * Типы BLE характеристик, которые есть в контроллере
+     */
     private fun BluetoothGattCharacteristic.isNotifiable(): Boolean =
         containsProperty(BluetoothGattCharacteristic.PROPERTY_NOTIFY)
 
     private fun BluetoothGattCharacteristic.isIndictable(): Boolean =
         containsProperty(BluetoothGattCharacteristic.PROPERTY_INDICATE)
+
+    private fun BluetoothGattCharacteristic.isWritable(): Boolean =
+        containsProperty(BluetoothGattCharacteristic.PROPERTY_WRITE)
+
+    private fun BluetoothGattCharacteristic.isWritableWithoutResponse(): Boolean =
+        containsProperty(BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)
 
     private fun BluetoothGattCharacteristic.containsProperty(property: Int): Boolean {
         return properties and property != 0
@@ -339,6 +389,9 @@ class BleModel : Observable() {
         const val SCAN_ERROR = "SCAN ERROR"
         const val USER_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805f9b34fb"
         const val USER_UUID_STM = "00002a37-0000-1000-8000-00805f9b34fb"
+        const val USER_UUID_P2P = "0000fe41-8e22-4541-9d4c-21edae82ed19"
+        const val PRESSURE_UUID = "0000ff04-8e22-4541-9d4c-21edae82ed19"
+        const val LED_UUID = "0000ff70-8e22-4541-9d4c-21edae82ed19"
         const val USER_UUID_TEXAS = "0000fff4-0000-1000-8000-00805f9b34fb"
     }
 }

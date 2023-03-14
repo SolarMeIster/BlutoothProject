@@ -96,6 +96,7 @@ class ListBleDevicesFragment : Fragment() {
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        // нажатие на кнопку
         binding.btnScanBleDevices.setOnClickListener {
             if (isScanning)
                 stopBleScan()
@@ -148,7 +149,8 @@ class ListBleDevicesFragment : Fragment() {
         if (!requireActivity().hasRequiredRunTimePermission()) {
             requestRelevantRuntimePermissions()
         }
-        // добавить корутины!!!
+        // Прошлый Вова: добавить корутины
+        // Сейчашний Вова: а все асинхронка уже есть!!!
         else {
             listBleDevicesViewModel.startSearch()
             isScanning = true
@@ -182,7 +184,7 @@ class ListBleDevicesFragment : Fragment() {
         }
     }
 
-    // проверка permissions
+    // проверка разрешений
     private fun Context.hasPermission(permissionType: String): Boolean {
         return ContextCompat.checkSelfPermission(this, permissionType) ==
                 PackageManager.PERMISSION_GRANTED
@@ -206,13 +208,13 @@ class ListBleDevicesFragment : Fragment() {
         }
     }
 
-    // запуск Bluetooth
+    // запуск Bluetooth, если на телефоне он выключен
     private fun checkBluetooth() {
         val enableBluetooth = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
         startForResult.launch(enableBluetooth)
     }
 
     companion object {
-        const val SCAN_PERIOD = 10000L
+        const val SCAN_PERIOD = 30000L
     }
 }

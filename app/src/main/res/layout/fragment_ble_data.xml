@@ -13,11 +13,11 @@
         app:title="Давление"
         app:titleTextColor="@color/white"
         android:background="@color/emerald_color"
-        app:titleCentered="true"
         app:navigationIcon="@drawable/ic_back_arrow"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent"
+        app:menu="@menu/data_menu"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewOfBleDeviceData"
