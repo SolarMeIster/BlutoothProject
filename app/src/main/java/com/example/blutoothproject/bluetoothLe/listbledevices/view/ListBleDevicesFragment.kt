@@ -98,6 +98,10 @@ class ListBleDevicesFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         // нажатие на кнопку
         binding.btnScanBleDevices.setOnClickListener {
+            if (!listBleDevicesViewModel.checkBluetooth()) {
+                checkBluetooth()
+                return@setOnClickListener
+            }
             if (isScanning)
                 stopBleScan()
             else {
@@ -152,6 +156,7 @@ class ListBleDevicesFragment : Fragment() {
         // Прошлый Вова: добавить корутины
         // Сейчашний Вова: а все асинхронка уже есть!!!
         else {
+
             listBleDevicesViewModel.startSearch()
             isScanning = true
         }

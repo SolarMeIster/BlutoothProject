@@ -9,6 +9,7 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.util.Log
 import com.example.blutoothproject.App
+import com.example.blutoothproject.BleStruct
 import com.example.blutoothproject.Observable
 import com.example.blutoothproject.bluetoothLe.*
 import java.util.*
@@ -28,7 +29,7 @@ class BleModel : Observable() {
     val scanResults: MutableList<ScanResult> =
         mutableListOf() // данные по устройствам (идут в ListBleDevicesFragment)
     var characteristicValues =
-        mutableMapOf<String, Float>() // данные по значениям давления подключенных устройств (идут в BleDataFragment)
+        mutableMapOf<String, BleStruct>() // данные по значениям давления подключенных устройств (идут в BleDataFragment)
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager =
@@ -45,7 +46,7 @@ class BleModel : Observable() {
 
     private val scanResultCallback = object : ScanCallback() {
 
-        // колбэк, который возвращает найтденные устройства
+        // калбэк, который возвращает найтденные устройства
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             val indexQuery = scanResults.indexOfFirst { it.device.address == result.device.address }
             if (indexQuery != -1) {
@@ -100,7 +101,7 @@ class BleModel : Observable() {
             }
         }
 
-        // колбэк, который показывает какие сервисы, характеристики и т.д. находятся на BLE устройстве
+        // калбэк, который показывает какие сервисы, характеристики и т.д. находятся на BLE устройстве
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
             with(gatt) {
                 if (services.isEmpty()) {
@@ -143,14 +144,7 @@ class BleModel : Observable() {
             characteristic: BluetoothGattCharacteristic
         ) {
             if (gatt != null) {
-                when (gatt.device?.name) {
-                    "SimpleBLEPeripheral" -> {
-                        changeVisualisationData(gatt, characteristic)
-                    }
-                    else -> {
-                        changeVisualisationData(gatt, characteristic)
-                    }
-                }
+                changeVisualisationData(gatt, characteristic)
             }
         }
     }
@@ -160,17 +154,49 @@ class BleModel : Observable() {
         characteristic: BluetoothGattCharacteristic,
     ) {
         val characteristicByteArray = characteristic.value.copyOf()
-        val temperature = if (characteristicByteArray.size >= 2) {
-            (characteristicByteArray[3].toInt() shl 8) + characteristicByteArray[2]
-        } else {
-            characteristicByteArray[0].toInt()
+        var pressure = 0f
+        var temp = 0f
+        when (characteristicByteArray[0].toInt()) {
+            101 -> {characteristicValues[gatt.device.name] = BleStruct(characteristicByteArray[0].toInt(), characteristicByteArray[0].toFloat())}
+            1 -> {
+                pressure = countPressure(characteristicByteArray)
+                characteristicValues[gatt.device.name] =
+                    BleStruct(characteristicByteArray[0].toInt(), pressure)
+            }
+            2 -> {
+                pressure = countPressure(characteristicByteArray)
+                temp = countTemp(characteristicByteArray)
+                characteristicValues[gatt.device.name] =
+                    BleStruct(characteristicByteArray[0].toInt(), pressure, temp)
+            }
+            3 -> {
+                pressure = countPressure(characteristicByteArray)
+                temp = countTemp(characteristicByteArray)
+                val humidity = countHum(characteristicByteArray)
+                characteristicValues[gatt.device.name] =
+                    BleStruct(characteristicByteArray[0].toInt(), pressure, temp, humidity)
+            } else -> {
+                characteristicValues[gatt.device.name] =
+                    BleStruct(characteristicByteArray[0].toInt())
+            }
         }
-        characteristicValues[gatt.device.name] = (temperature).toFloat()
         Log.i(
             "onCharacteristicChanged",
-            "Device ${gatt.device.name}, Characteristic: ${characteristic.uuid}, Value: $temperature"
+            "Device ${gatt.device.name}, Characteristic: ${characteristic.uuid}, Pressure: $pressure, Temperature: $temp"
         )
         notifyChanged()
+    }
+
+    private fun countPressure(byteArray: ByteArray): Float {
+        return ((((byteArray[4].toInt() and 0xff) shl 8) + (byteArray[3].toInt() and 0xff)) shl 8) + (byteArray[2].toInt() and 0xff).toFloat()
+    }
+
+    private fun countTemp(byteArray: ByteArray): Float {
+        return (((byteArray[6].toInt() and 0xff) shl 8) + (byteArray[5].toInt() and 0xff) ) / 100f
+    }
+
+    private fun countHum(byteArray: ByteArray): Float {
+        return ((byteArray[8].toInt() and 0xff) shl 8) + (byteArray[7].toInt() and 0xff).toFloat()
     }
 
     // старт сканирования устройств
@@ -321,7 +347,6 @@ class BleModel : Observable() {
                         Log.i("EnableNotification", "Device: $device is enabled notification")
                         cccDescriptor.value = payload
                         gatt.writeDescriptor(cccDescriptor)
-                        characteristicValues[gatt.device.name] = 0f
                         endOfOperation()
                     }
                 }
@@ -353,7 +378,8 @@ class BleModel : Observable() {
                     }
                     gatt.let {
                         characteristic.writeType = writeType
-                        characteristic.value = byteArrayOf(1) // данные, которые отправляются на контроллер и включает LED
+                        characteristic.value =
+                            byteArrayOf(1) // данные, которые отправляются на контроллер и включает LED
                         it.writeCharacteristic(characteristic)
                     }
                     endOfOperation()
@@ -366,7 +392,7 @@ class BleModel : Observable() {
         }
     }
 
-    /**
+    /*
      * Типы BLE характеристик, которые есть в контроллере
      */
     private fun BluetoothGattCharacteristic.isNotifiable(): Boolean =

@@ -9,7 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.blutoothproject.*
-import com.example.blutoothproject.bluetoothLe.BleDataAdapter
+import com.example.blutoothproject.bluetoothLe.bledata.BleDataAdapter
 import com.example.blutoothproject.ViewModelFactory
 import com.example.blutoothproject.bluetoothLe.bledata.viewmodel.BleDataViewModel
 import com.example.blutoothproject.databinding.FragmentBleDataBinding
@@ -87,8 +87,4 @@ class BleDataFragment : Fragment() {
             recyclerViewOfBleDeviceData.adapter = bleDataAdapter
         }
     }
-
-
-
-
 }

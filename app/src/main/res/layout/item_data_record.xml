@@ -1,54 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="12dp">
+    android:layout_marginTop="12dp"
+    android:layout_marginStart="12dp"
+    android:layout_marginEnd="12dp"
+    app:cardCornerRadius="5dp"
+    android:elevation="20dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/txDeviceNameData"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="12dp"
+            android:layout_marginStart="12dp"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="STM32WB55" />
+
+        <View
+            android:id="@+id/line"
+            android:layout_width="match_parent"
+            android:layout_height="0.7dp"
+            android:background="@color/grey"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="4dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/txDeviceNameData"
+            app:layout_constraintBottom_toBottomOf="@id/guideline2"/>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/txPressure"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/black"
+            android:layout_marginTop="12dp"
+            android:textSize="16sp"
+            android:text="@string/pressure"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="36dp"
+            app:layout_constraintBottom_toTopOf="@id/txTemp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/line" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/dataPressure"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="16dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/dataTemp"
+            app:layout_constraintStart_toEndOf="@id/guideline"
+            app:layout_constraintTop_toBottomOf="@id/line"
+            tools:text="120000" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/txDimPressure"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dimPressure"
+            android:textSize="16sp"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/black"
+            android:visibility="gone"
+            app:layout_constraintStart_toEndOf="@id/dataPressure"
+            app:layout_constraintTop_toBottomOf="@id/line" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/txTemp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="36dp"
+            android:layout_marginBottom="12dp"
+            android:text="@string/temperature"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/txHumidity"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/txPressure" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/dataTemp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp"
+            android:layout_marginStart="16dp"
+            app:layout_constraintBottom_toTopOf="@id/dataHumidity"
+            app:layout_constraintStart_toEndOf="@id/guideline"
+            app:layout_constraintTop_toBottomOf="@id/dataPressure"
+            tools:text="25.5" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/txDimTemp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dimTemp"
+            android:textSize="16sp"
+            android:visibility="gone"
+            android:layout_marginTop="12dp"
+            android:textColor="@color/black"
+            app:layout_constraintStart_toEndOf="@id/dataTemp"
+            app:layout_constraintTop_toBottomOf="@id/dataPressure" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/txHumidity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="36dp"
+            android:text="@string/Humidity"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:visibility="gone"
+            android:layout_marginBottom="12dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/txTemp"/>
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/dataHumidity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:visibility="gone"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="12dp"
+            app:layout_constraintStart_toEndOf="@id/guideline"
+            app:layout_constraintTop_toBottomOf="@id/dataTemp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            tools:text="62" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/txDimHum"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/dimHum"
+            android:textColor="@color/black"
+            android:textSize="16sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@id/dataHumidity"
+            app:layout_constraintTop_toBottomOf="@id/dataTemp" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_begin="154dp" />
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/guideline2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_begin="50dp" />
 
 
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/txDeviceNameData"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginEnd="8dp"
-        android:textColor="@color/black"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/colon"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="STM32WB55" />
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/colon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="6dp"
-        android:text="@string/colon"
-        android:textColor="@color/black"
-        android:textSize="36sp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.textview.MaterialTextView
-        android:id="@+id/txData"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginStart="8dp"
-        android:textColor="@color/black"
-        android:textSize="28sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/colon"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:text="120" />
-
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</androidx.cardview.widget.CardView>
