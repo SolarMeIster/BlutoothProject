@@ -10,8 +10,8 @@ import com.example.blutoothproject.bluetoothLe.model.BleModel
 
 class BleDataViewModel(private val bleModel: BleModel) : ViewModel(), IObserver {
 
-    private val _characteristicValue = MutableLiveData<Map<String, BleStruct>>()
-    val characteristicValue: LiveData<Map<String, BleStruct>> = _characteristicValue
+    private val _characteristicValue = MutableLiveData<Map<BluetoothDevice, BleStruct>>()
+    val characteristicValue: LiveData<Map<BluetoothDevice, BleStruct>> = _characteristicValue
 
     init {
         bleModel.addListener(this)
@@ -24,6 +24,8 @@ class BleDataViewModel(private val bleModel: BleModel) : ViewModel(), IObserver 
     fun writeChar() {
         bleModel.writeCharacteristic()
     }
+
+    fun num() = 15
 
     fun disconnect(device: BluetoothDevice) {
         bleModel.disconnectFromDevice(device)

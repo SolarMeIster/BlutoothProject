@@ -24,4 +24,9 @@
     <string name="dimPressure">\u0020Па</string>
     <string name="dimTemp">\u0020°C</string>
     <string name="dimHum">\u0020%</string>
+    <string-array name="delay">
+        <item name="1_Sec">1 секунда</item>
+        <item name="30_Sec">30 секунд</item>
+        <item name="5_min">5 минут</item>
+    </string-array>
 </resources>

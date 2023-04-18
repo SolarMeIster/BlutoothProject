@@ -29,7 +29,7 @@ class BleModel : Observable() {
     val scanResults: MutableList<ScanResult> =
         mutableListOf() // данные по устройствам (идут в ListBleDevicesFragment)
     var characteristicValues =
-        mutableMapOf<String, BleStruct>() // данные по значениям давления подключенных устройств (идут в BleDataFragment)
+        mutableMapOf<BluetoothDevice, BleStruct>() // данные по значениям давления подключенных устройств (идут в BleDataFragment)
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager =
@@ -72,6 +72,7 @@ class BleModel : Observable() {
             val deviceAddress = gatt.device?.address
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 if (newState == BluetoothGatt.STATE_CONNECTED) {
+                    Log.i("Connect", "Device: ${gatt.device.name} is connected")
                     gattDevices[gatt.device] = gatt
                     gatt.discoverServices()
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
@@ -111,6 +112,7 @@ class BleModel : Observable() {
                     )
                     return
                 }
+                Log.i("BluetoothService", "Start discovering services into device: ${gatt.device.name}\n")
                 services.forEach { service ->
                     val characteristics = service.characteristics.joinToString(
                         separator = "\n--",
@@ -130,8 +132,8 @@ class BleModel : Observable() {
                                 PRESSURE_UUID
                             )
                         ) {
+                            Log.i("EnableNotification", "Enable to notification of ${gatt.device.name}\n")
                             enableNotification(characteristic, gatt)
-
                         }
                     }
                 }
@@ -157,26 +159,26 @@ class BleModel : Observable() {
         var pressure = 0f
         var temp = 0f
         when (characteristicByteArray[0].toInt()) {
-            101 -> {characteristicValues[gatt.device.name] = BleStruct(characteristicByteArray[0].toInt(), characteristicByteArray[0].toFloat())}
+            101 -> {characteristicValues[gatt.device] = BleStruct(characteristicByteArray[0].toInt(), characteristicByteArray[0].toFloat())}
             1 -> {
                 pressure = countPressure(characteristicByteArray)
-                characteristicValues[gatt.device.name] =
+                characteristicValues[gatt.device] =
                     BleStruct(characteristicByteArray[0].toInt(), pressure)
             }
             2 -> {
                 pressure = countPressure(characteristicByteArray)
                 temp = countTemp(characteristicByteArray)
-                characteristicValues[gatt.device.name] =
+                characteristicValues[gatt.device] =
                     BleStruct(characteristicByteArray[0].toInt(), pressure, temp)
             }
             3 -> {
                 pressure = countPressure(characteristicByteArray)
                 temp = countTemp(characteristicByteArray)
                 val humidity = countHum(characteristicByteArray)
-                characteristicValues[gatt.device.name] =
+                characteristicValues[gatt.device] =
                     BleStruct(characteristicByteArray[0].toInt(), pressure, temp, humidity)
             } else -> {
-                characteristicValues[gatt.device.name] =
+                characteristicValues[gatt.device] =
                     BleStruct(characteristicByteArray[0].toInt())
             }
         }

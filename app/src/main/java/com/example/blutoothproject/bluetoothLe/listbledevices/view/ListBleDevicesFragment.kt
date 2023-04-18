@@ -13,9 +13,11 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.blutoothproject.databinding.FragmentListBleDevicesBinding
 import android.Manifest
+import android.annotation.SuppressLint
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.*
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.view.MenuProvider
@@ -29,7 +31,12 @@ import com.example.blutoothproject.bluetoothLe.listbledevices.viewmodel.ListBleD
 import com.example.blutoothproject.bluetoothLe.bledata.view.BleDataFragment
 import com.example.blutoothproject.ViewModelFactory
 import com.example.blutoothproject.settings.view.SettingsFragment
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
+@SuppressLint("MissingPermission")
 class ListBleDevicesFragment : Fragment() {
 
     private lateinit var binding: FragmentListBleDevicesBinding
@@ -75,6 +82,7 @@ class ListBleDevicesFragment : Fragment() {
         ListBleDevicesAdapter { result: ScanResult ->
             isScanning = false
             with(result) {
+                Log.i("Connect", "Connecting to ${device.name ?: "Unnamed"}...")
                 listBleDevicesViewModel.connect(device)
                 parentFragmentManager.commit {
                     setReorderingAllowed(true)
@@ -82,6 +90,7 @@ class ListBleDevicesFragment : Fragment() {
                     replace<BleDataFragment>(R.id.container)
                 }
             }
+
         }
     }
 
@@ -92,6 +101,10 @@ class ListBleDevicesFragment : Fragment() {
     ): View {
         binding = FragmentListBleDevicesBinding.inflate(inflater, container, false)
         setupRecyclerView()
+        Log.i("CreateFragment", "Create start fragment")
+        listBleDevicesViewModel.listDevice.observe(viewLifecycleOwner) {
+            listBleDevicesAdapter.data = it
+        }
         return binding.root
     }
 
@@ -105,12 +118,15 @@ class ListBleDevicesFragment : Fragment() {
             if (isScanning)
                 stopBleScan()
             else {
+                with (listBleDevicesAdapter) {
+                    if (data.isNotEmpty()) {
+                        binding.recyclerViewOfBleDevices.adapter?.notifyItemRangeRemoved(0, data.size)
+                    }
+                }
                 Handler(Looper.getMainLooper()).postDelayed({ stopBleScan() }, SCAN_PERIOD)
                 startBleScan()
+                Log.i("Scanning", "Start scanning")
             }
-        }
-        listBleDevicesViewModel.listDevice.observe(viewLifecycleOwner) {
-            listBleDevicesAdapter.data = it
         }
         with(binding.menuToolBar) {
             addMenuProvider(object : MenuProvider {
@@ -140,7 +156,6 @@ class ListBleDevicesFragment : Fragment() {
         }
     }
 
-
     override fun onResume() {
         super.onResume()
         if (!listBleDevicesViewModel.checkBluetooth()) {
@@ -156,7 +171,6 @@ class ListBleDevicesFragment : Fragment() {
         // Прошлый Вова: добавить корутины
         // Сейчашний Вова: а все асинхронка уже есть!!!
         else {
-
             listBleDevicesViewModel.startSearch()
             isScanning = true
         }

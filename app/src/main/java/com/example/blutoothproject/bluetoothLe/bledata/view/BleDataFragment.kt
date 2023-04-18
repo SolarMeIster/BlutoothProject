@@ -2,7 +2,11 @@ package com.example.blutoothproject.bluetoothLe.bledata.view
 
 import android.content.Context
 import android.os.*
+import android.util.Log
 import android.view.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -23,7 +27,32 @@ class BleDataFragment : Fragment() {
     }
 
     private val bleDataAdapter: BleDataAdapter by lazy {
-        BleDataAdapter()
+        BleDataAdapter() {
+            /*ArrayAdapter.createFromResource(
+                requireContext(), R.array.delay, android.R.layout.simple_spinner_item
+            ).also { adapter ->
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                bleDataAdapter.binding.spinner.adapter = adapter
+            }
+            val itemSpinnerSelected = object : AdapterView.OnItemSelectedListener {
+                override fun onItemSelected(
+                    parent: AdapterView<*>?,
+                    view: View?,
+                    position: Int,
+                    id: Long
+                ) {
+                    val selectedString = resources.getStringArray(R.array.delay)
+                    Log.i("MySpinner", selectedString[position])
+                }
+
+                override fun onNothingSelected(parent: AdapterView<*>?) {
+                    TODO("Not yet implemented")
+                }
+
+            }
+            bleDataAdapter.binding.spinner.onItemSelectedListener = itemSpinnerSelected*/
+
+        }
     }
 
     private lateinit var binding: FragmentBleDataBinding

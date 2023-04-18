@@ -1,54 +1,80 @@
 package com.example.blutoothproject.bluetoothLe.bledata
 
+import android.bluetooth.BluetoothDevice
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.blutoothproject.BleStruct
+import com.example.blutoothproject.bluetoothLe.bledata.viewmodel.BleDataViewModel
 import com.example.blutoothproject.databinding.ItemDataRecordBinding
 
 @SuppressWarnings("MissingPermission")
-class BleDataAdapter : RecyclerView.Adapter<BleDataAdapter.ViewHolder>() {
+class BleDataAdapter(private val clickListener: (() -> Unit)) :
+    RecyclerView.Adapter<BleDataAdapter.ViewHolder>() {
 
     private lateinit var binding: ItemDataRecordBinding
 
-    var data = emptyList<Pair<String, BleStruct>>()
+    var data = emptyList<Pair<BluetoothDevice, BleStruct>>()
         set(newField) {
             field = newField
             notifyDataSetChanged()
         }
 
-    class ViewHolder(private val binding: ItemDataRecordBinding) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(data: Pair<String, BleStruct>) {
+    class ViewHolder(
+        private val binding: ItemDataRecordBinding,
+        private val clickListener: () -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
+        fun bind(data: Pair<BluetoothDevice, BleStruct>) {
+
             with(binding) {
-                when(data.second.flags) {
+                txDeviceNameData.text = data.first.name
+                //spinner.onItemClickListener {clickListener.invoke()}
+                when (data.second.flags) {
                     1 -> {
-                        txDeviceNameData.text = data.first
                         dataPressure.text = data.second.pressure.toString()
-                        visiblePressure()
+                        if (dataPressure.visibility != View.VISIBLE) {
+                            visiblePressure()
+                        }
                     }
                     2 -> {
-                        txDeviceNameData.text = data.first
                         dataPressure.text = data.second.pressure.toString()
                         dataTemp.text = data.second.temperature.toString()
-                        visiblePressure()
-                        visibleTemp()
+                        if (
+                            dataPressure.visibility != View.VISIBLE &&
+                            dataTemp.visibility != View.VISIBLE
+                        ) {
+                            visiblePressure()
+                            visibleTemp()
+                        }
                     }
                     3 -> {
-                        txDeviceNameData.text = data.first
                         dataPressure.text = data.second.pressure.toString()
                         dataTemp.text = data.second.temperature.toString()
                         dataHumidity.text = data.second.humidity.toString()
-                        visiblePressure()
+                        if (
+                            dataPressure.visibility != View.VISIBLE &&
+                            dataTemp.visibility != View.VISIBLE &&
+                            dataHumidity.visibility != View.VISIBLE
+                        ) {
+                            visiblePressure()
+                            visibleTemp()
+                            visibleHum()
+                        }
+                    }
+                    101 -> {
+                        dataTemp.text = data.second.flags.toString()
                         visibleTemp()
-                        visibleHum()
+                    }
+                    else -> {
+
                     }
                 }
             }
         }
 
         private fun visiblePressure() {
-            with(binding){
+            with(binding) {
                 dataPressure.visibility = View.VISIBLE
                 txPressure.visibility = View.VISIBLE
                 txDimPressure.visibility = View.VISIBLE
@@ -76,7 +102,7 @@ class BleDataAdapter : RecyclerView.Adapter<BleDataAdapter.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         binding = ItemDataRecordBinding.inflate(inflater, parent, false)
-        return ViewHolder(binding)
+        return ViewHolder(binding, clickListener)
     }
 
     override fun getItemCount(): Int = data.size

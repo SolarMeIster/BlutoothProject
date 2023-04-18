@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.bluetooth.le.ScanResult
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.blutoothproject.databinding.ItemBleDeviceBinding
 
@@ -15,11 +16,16 @@ class ListBleDevicesAdapter(private val onClickListener: ((result: ScanResult) -
 
     var data = emptyList<ScanResult>()
         set(newField) {
+            val listBleDeviceDiffCallback = ListBleDeviceDiffCallback(field, newField)
+            val listBleDeviceDiffResult = DiffUtil.calculateDiff(listBleDeviceDiffCallback)
             field = newField
-            notifyDataSetChanged()
+            listBleDeviceDiffResult.dispatchUpdatesTo(this)
         }
 
-    class ViewHolder(private val binding: ItemBleDeviceBinding, private val onClickListener: (result: ScanResult) -> Unit) : RecyclerView.ViewHolder(binding.root) {
+    class ViewHolder(
+        private val binding: ItemBleDeviceBinding,
+        private val onClickListener: (result: ScanResult) -> Unit
+    ) : RecyclerView.ViewHolder(binding.root) {
         fun bind(data: ScanResult) {
             with(binding) {
                 txDeviceName.text = data.device.name ?: "Unnamed"
