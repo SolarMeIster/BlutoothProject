@@ -1,45 +1,56 @@
 package com.example.blutoothproject.bluetoothLe.bledata
 
-import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.blutoothproject.BleStruct
-import com.example.blutoothproject.bluetoothLe.bledata.viewmodel.BleDataViewModel
+import com.example.blutoothproject.bluetoothLe.model.BleModel
 import com.example.blutoothproject.databinding.ItemDataRecordBinding
 
 @SuppressWarnings("MissingPermission")
-class BleDataAdapter(private val clickListener: (() -> Unit)) :
+
+class BleDataAdapter :
     RecyclerView.Adapter<BleDataAdapter.ViewHolder>() {
 
     private lateinit var binding: ItemDataRecordBinding
 
-    var data = emptyList<Pair<BluetoothDevice, BleStruct>>()
+    var data = emptyList<
+            Pair<BluetoothGatt, BleStruct>
+            >()
         set(newField) {
             field = newField
             notifyDataSetChanged()
         }
 
     class ViewHolder(
-        private val binding: ItemDataRecordBinding,
-        private val clickListener: () -> Unit
+        private val binding: ItemDataRecordBinding
     ) : RecyclerView.ViewHolder(binding.root) {
-        fun bind(data: Pair<BluetoothDevice, BleStruct>) {
-
+        fun bind(currentData: Pair<BluetoothGatt, BleStruct>, countOfDevices: Int) {
+            val deviceName = currentData.first.device.name
+            val round: String
             with(binding) {
-                txDeviceNameData.text = data.first.name
+                
+                txDeviceNameData.text = deviceName
                 //spinner.onItemClickListener {clickListener.invoke()}
-                when (data.second.flags) {
+                if (deviceName == BleModel.EXTERNAL_SENSOR || countOfDevices <= 1) {
+                    txDimPressure.text = " мм. рт. ст."
+                    round = "%.2f"
+                } else {
+                    txDimPressure.text = " мбар"
+                    round = "%.1f"
+                }
+                when (currentData.second.flags) {
                     1 -> {
-                        dataPressure.text = data.second.pressure.toString()
+                        dataPressure.text = String.format(round, currentData.second.pressure)
                         if (dataPressure.visibility != View.VISIBLE) {
                             visiblePressure()
                         }
                     }
                     2 -> {
-                        dataPressure.text = data.second.pressure.toString()
-                        dataTemp.text = data.second.temperature.toString()
+                        dataPressure.text = String.format(round, currentData.second.pressure)
+                        dataTemp.text = currentData.second.temperature.toString()
                         if (
                             dataPressure.visibility != View.VISIBLE &&
                             dataTemp.visibility != View.VISIBLE
@@ -49,9 +60,9 @@ class BleDataAdapter(private val clickListener: (() -> Unit)) :
                         }
                     }
                     3 -> {
-                        dataPressure.text = data.second.pressure.toString()
-                        dataTemp.text = data.second.temperature.toString()
-                        dataHumidity.text = data.second.humidity.toString()
+                        dataPressure.text = String.format(round, currentData.second.pressure)
+                        dataTemp.text = currentData.second.temperature.toString()
+                        dataHumidity.text = currentData.second.humidity.toString()
                         if (
                             dataPressure.visibility != View.VISIBLE &&
                             dataTemp.visibility != View.VISIBLE &&
@@ -63,7 +74,7 @@ class BleDataAdapter(private val clickListener: (() -> Unit)) :
                         }
                     }
                     101 -> {
-                        dataTemp.text = data.second.flags.toString()
+                        dataTemp.text = currentData.second.flags.toString()
                         visibleTemp()
                     }
                     else -> {
@@ -102,13 +113,13 @@ class BleDataAdapter(private val clickListener: (() -> Unit)) :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
         binding = ItemDataRecordBinding.inflate(inflater, parent, false)
-        return ViewHolder(binding, clickListener)
+        return ViewHolder(binding)
     }
 
     override fun getItemCount(): Int = data.size
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val info = data[position]
-        holder.bind(info)
+        holder.bind(info, data.size)
     }
 }

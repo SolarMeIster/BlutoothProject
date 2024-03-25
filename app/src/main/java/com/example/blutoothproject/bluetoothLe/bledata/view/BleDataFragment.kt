@@ -1,12 +1,11 @@
 package com.example.blutoothproject.bluetoothLe.bledata.view
 
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothGatt
 import android.content.Context
 import android.os.*
 import android.util.Log
 import android.view.*
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
@@ -18,7 +17,11 @@ import com.example.blutoothproject.ViewModelFactory
 import com.example.blutoothproject.bluetoothLe.bledata.viewmodel.BleDataViewModel
 import com.example.blutoothproject.databinding.FragmentBleDataBinding
 
+@SuppressLint("MissingPermission")
 class BleDataFragment : Fragment() {
+
+    private var reconnect: Boolean =
+        false // срабатывает когда приложение свернули или закрыли фрагмент или повернули в горизонт
 
     private val bleDataViewModel: BleDataViewModel by viewModels {
         ViewModelFactory(
@@ -27,32 +30,7 @@ class BleDataFragment : Fragment() {
     }
 
     private val bleDataAdapter: BleDataAdapter by lazy {
-        BleDataAdapter() {
-            /*ArrayAdapter.createFromResource(
-                requireContext(), R.array.delay, android.R.layout.simple_spinner_item
-            ).also { adapter ->
-                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                bleDataAdapter.binding.spinner.adapter = adapter
-            }
-            val itemSpinnerSelected = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(
-                    parent: AdapterView<*>?,
-                    view: View?,
-                    position: Int,
-                    id: Long
-                ) {
-                    val selectedString = resources.getStringArray(R.array.delay)
-                    Log.i("MySpinner", selectedString[position])
-                }
-
-                override fun onNothingSelected(parent: AdapterView<*>?) {
-                    TODO("Not yet implemented")
-                }
-
-            }
-            bleDataAdapter.binding.spinner.onItemSelectedListener = itemSpinnerSelected*/
-
-        }
+        BleDataAdapter()
     }
 
     private lateinit var binding: FragmentBleDataBinding
@@ -64,9 +42,16 @@ class BleDataFragment : Fragment() {
     ): View {
         bleDataViewModel.characteristicValue.observe(viewLifecycleOwner) { result ->
             bleDataAdapter.data = result.toList()
+            if (bleDataAdapter.data.isNotEmpty() && reconnect) {
+                bleDataAdapter.data.forEach { pair ->
+                    bleDataViewModel.enableNotify(pair.first)
+                }
+                reconnect = false
+            }
         }
         binding = FragmentBleDataBinding.inflate(inflater, container, false)
         setupRecyclerView()
+        Log.i("Fragment", "onCreateView")
         return binding.root
     }
 
@@ -84,20 +69,19 @@ class BleDataFragment : Fragment() {
                 override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
 
                 override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                   when(menuItem.itemId) {
-                       R.id.ledCheck -> {
-                           bleDataViewModel.writeChar()
-                       }
-                       R.id.bluetoothDisconnect -> {
+                    when (menuItem.itemId) {
+                        R.id.ledCheck -> {
+                            bleDataViewModel.writeChar()
+                        }
+                        R.id.bluetoothDisconnect -> {
 
-                       }
-                   }
+                        }
+                    }
                     return true
                 }
 
             })
         }
-
         /*if (Build.VERSION_CODES.S <= Build.VERSION.SDK_INT && bleDataFragmentViewModel.exceedPressure()) {
             vibrator.vibrate(
                 CombinedVibration.createParallel(
@@ -110,10 +94,36 @@ class BleDataFragment : Fragment() {
         }*/
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (reconnect)
+            bleDataViewModel.notifyChanged()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        bleDataAdapter.data.forEach { pair ->
+            bleDataViewModel.disableNotify(pair.first)
+        }
+        reconnect = true
+        Log.i("Fragment", "onStop")
+    }
+
+
+    /*override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(RECONNECT, reconnect)
+        Log.i("Fragment", "onSaveInstanceState")
+    }*/
+
     private fun setupRecyclerView() {
         with(binding) {
             recyclerViewOfBleDeviceData.layoutManager = LinearLayoutManager(requireContext())
             recyclerViewOfBleDeviceData.adapter = bleDataAdapter
         }
+    }
+
+    companion object {
+        const val RECONNECT = "Reconnect"
     }
 }

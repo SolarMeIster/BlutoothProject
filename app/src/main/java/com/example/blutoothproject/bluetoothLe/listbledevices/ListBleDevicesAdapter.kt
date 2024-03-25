@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
+import com.example.blutoothproject.bluetoothLe.DiffCallback
 import com.example.blutoothproject.databinding.ItemBleDeviceBinding
 
 @SuppressLint("MissingPermission")
@@ -16,8 +17,8 @@ class ListBleDevicesAdapter(private val onClickListener: ((result: ScanResult) -
 
     var data = emptyList<ScanResult>()
         set(newField) {
-            val listBleDeviceDiffCallback = ListBleDeviceDiffCallback(field, newField)
-            val listBleDeviceDiffResult = DiffUtil.calculateDiff(listBleDeviceDiffCallback)
+            val diffCallback = DiffCallback(field, newField)
+            val listBleDeviceDiffResult = DiffUtil.calculateDiff(diffCallback)
             field = newField
             listBleDeviceDiffResult.dispatchUpdatesTo(this)
         }

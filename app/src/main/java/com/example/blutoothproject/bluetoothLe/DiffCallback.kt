@@ -1,9 +1,10 @@
-package com.example.blutoothproject.bluetoothLe.listbledevices
+package com.example.blutoothproject.bluetoothLe
 
 import android.bluetooth.le.ScanResult
 import androidx.recyclerview.widget.DiffUtil
 
-class ListBleDeviceDiffCallback(private val oldList: List<ScanResult>, private val newList: List<ScanResult>) : DiffUtil.Callback() {
+class DiffCallback (private val oldList: List<ScanResult>, private val newList: List<ScanResult>) : DiffUtil.Callback() {
+
     override fun getOldListSize(): Int {
         return oldList.size
     }

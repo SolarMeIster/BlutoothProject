@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.blutoothproject.databinding.FragmentListBleDevicesBinding
 import android.Manifest
 import android.annotation.SuppressLint
+import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothGatt
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -35,12 +37,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.util.concurrent.ConcurrentHashMap
 
 @SuppressLint("MissingPermission")
 class ListBleDevicesFragment : Fragment() {
 
     private lateinit var binding: FragmentListBleDevicesBinding
 
+    private var connectedDevices = ConcurrentHashMap<BluetoothDevice, BluetoothGatt>()
     private val listBleDevicesViewModel: ListBleDevicesViewModel by viewModels {
         ViewModelFactory(
             requireContext().applicationContext as App
@@ -83,6 +87,11 @@ class ListBleDevicesFragment : Fragment() {
             isScanning = false
             with(result) {
                 Log.i("Connect", "Connecting to ${device.name ?: "Unnamed"}...")
+                if (connectedDevices.isNotEmpty()) {
+                    connectedDevices.forEach { pair ->
+                        listBleDevicesViewModel.enableNotify(pair.value)
+                    }
+                }
                 listBleDevicesViewModel.connect(device)
                 parentFragmentManager.commit {
                     setReorderingAllowed(true)
@@ -102,6 +111,9 @@ class ListBleDevicesFragment : Fragment() {
         binding = FragmentListBleDevicesBinding.inflate(inflater, container, false)
         setupRecyclerView()
         Log.i("CreateFragment", "Create start fragment")
+        listBleDevicesViewModel.listConnectedDevices.observe(viewLifecycleOwner) {
+            connectedDevices = it
+        }
         listBleDevicesViewModel.listDevice.observe(viewLifecycleOwner) {
             listBleDevicesAdapter.data = it
         }
@@ -128,6 +140,7 @@ class ListBleDevicesFragment : Fragment() {
                 Log.i("Scanning", "Start scanning")
             }
         }
+
         with(binding.menuToolBar) {
             addMenuProvider(object : MenuProvider {
                 override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {}
@@ -142,6 +155,11 @@ class ListBleDevicesFragment : Fragment() {
                             }
                         }
                         R.id.contentBleScan -> {
+                            if (connectedDevices.isNotEmpty()) {
+                                connectedDevices.forEach { pair ->
+                                    listBleDevicesViewModel.enableNotify(pair.value)
+                                }
+                            }
                             parentFragmentManager.commit {
                                 setReorderingAllowed(true)
                                 addToBackStack(null)
@@ -235,5 +253,6 @@ class ListBleDevicesFragment : Fragment() {
 
     companion object {
         const val SCAN_PERIOD = 30000L
+        const val BLE_DATA_FRAGMENT = "BleDataFragment"
     }
 }

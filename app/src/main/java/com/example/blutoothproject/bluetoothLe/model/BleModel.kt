@@ -15,21 +15,25 @@ import com.example.blutoothproject.bluetoothLe.*
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
+import kotlin.math.abs
+import kotlin.math.round
 
 @SuppressLint("MissingPermission")
 class BleModel : Observable() {
 
-    private val gattDevices = ConcurrentHashMap<BluetoothDevice, BluetoothGatt>()
+    private var atmospherePressure = 0f
+
     private var pendingOperation: BleOperationType? = null
     private val operationsQueue = ConcurrentLinkedQueue<BleOperationType>()
     private val scanSetting = ScanSettings.Builder()
         .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
         .build()
 
+    val gattDevices = ConcurrentHashMap<BluetoothDevice, BluetoothGatt>()
     val scanResults: MutableList<ScanResult> =
         mutableListOf() // данные по устройствам (идут в ListBleDevicesFragment)
     var characteristicValues =
-        mutableMapOf<BluetoothDevice, BleStruct>() // данные по значениям давления подключенных устройств (идут в BleDataFragment)
+        mutableMapOf<BluetoothGatt, BleStruct>() // данные подключенных устройств (идут в BleDataFragment)
 
     private val bluetoothAdapter: BluetoothAdapter by lazy {
         val bluetoothManager =
@@ -67,6 +71,7 @@ class BleModel : Observable() {
 
     }
 
+
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
             val deviceAddress = gatt.device?.address
@@ -77,13 +82,7 @@ class BleModel : Observable() {
                     gatt.discoverServices()
                 } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
                     Log.i("GattCallback", "Disconnect device: $deviceAddress")
-                    gatt.services.forEach { service ->
-                        service.characteristics.forEach { characteristic ->
-                            if (characteristic.uuid == UUID.fromString(USER_UUID_STM)) {
-                                disableNotification(characteristic, gatt)
-                            }
-                        }
-                    }
+                    enableOrDisableNotification(gatt, ::disableNotification)
                     disconnectFromDevice(gatt.device)
                 }
             } else {
@@ -91,13 +90,7 @@ class BleModel : Observable() {
                 if (pendingOperation is Connect) {
                     endOfOperation()
                 }
-                gatt.services.forEach { service ->
-                    service.characteristics.forEach { characteristic ->
-                        if (characteristic.uuid == UUID.fromString(USER_UUID_STM)) {
-                            disableNotification(characteristic, gatt)
-                        }
-                    }
-                }
+                enableOrDisableNotification(gatt, ::disableNotification)
                 disconnectFromDevice(gatt.device)
             }
         }
@@ -112,7 +105,10 @@ class BleModel : Observable() {
                     )
                     return
                 }
-                Log.i("BluetoothService", "Start discovering services into device: ${gatt.device.name}\n")
+                Log.i(
+                    "BluetoothService",
+                    "Start discovering services into device: ${gatt.device.name}\n"
+                )
                 services.forEach { service ->
                     val characteristics = service.characteristics.joinToString(
                         separator = "\n--",
@@ -125,18 +121,8 @@ class BleModel : Observable() {
                     if (pendingOperation is Connect) {
                         endOfOperation()
                     }
-                    service.characteristics.forEach { characteristic ->
-                        if (characteristic.uuid == UUID.fromString(USER_UUID_STM) || characteristic.uuid == UUID.fromString(
-                                USER_UUID_TEXAS
-                            ) || characteristic.uuid == UUID.fromString(USER_UUID_P2P) || characteristic.uuid == UUID.fromString(
-                                PRESSURE_UUID
-                            )
-                        ) {
-                            Log.i("EnableNotification", "Enable to notification of ${gatt.device.name}\n")
-                            enableNotification(characteristic, gatt)
-                        }
-                    }
                 }
+                enableOrDisableNotification(gatt, ::enableNotification)
             }
         }
 
@@ -151,54 +137,103 @@ class BleModel : Observable() {
         }
     }
 
+    fun enableOrDisableNotification(
+        gatt: BluetoothGatt,
+        func: (characteristic: BluetoothGattCharacteristic, gatt: BluetoothGatt) -> Unit
+    ) {
+        with(gatt) {
+            services.forEach { service ->
+                service.characteristics.forEach { characteristic ->
+                    if (characteristic.uuid == UUID.fromString(USER_UUID_STM) || characteristic.uuid == UUID.fromString(
+                            USER_UUID_TEXAS
+                        ) || characteristic.uuid == UUID.fromString(USER_UUID_P2P) || characteristic.uuid == UUID.fromString(
+                            PRESSURE_UUID
+                        )
+                    ) {
+                        func(characteristic, gatt)
+                    }
+                }
+            }
+        }
+    }
+
     private fun changeVisualisationData(
         gatt: BluetoothGatt,
         characteristic: BluetoothGattCharacteristic,
     ) {
         val characteristicByteArray = characteristic.value.copyOf()
+        if (gatt.device.name == EXTERNAL_SENSOR || characteristicValues.size <= 1) {
+            chooseHowToChangeData(characteristicByteArray, gatt)
+            if (gatt.device.name == EXTERNAL_SENSOR)
+                atmospherePressure = countPressure(characteristicByteArray)
+        } else if (gatt.device.name == INNER_SENSOR) {
+            chooseHowToChangeData(characteristicByteArray, gatt, atmospherePressure)
+        }
+        notifyChanged()
+    }
+
+    private fun chooseHowToChangeData(
+        characteristicByteArray: ByteArray,
+        gatt: BluetoothGatt,
+        atmospherePressure: Float = 0f,
+    ) {
         var pressure = 0f
         var temp = 0f
+        val divider: Float = if (gatt.device.name == EXTERNAL_SENSOR || characteristicValues.size <= 1) {
+            DIVIDER_FOR_MM_HG
+        } else {
+            DIVIDER_FOR_MILIBARS
+        }
         when (characteristicByteArray[0].toInt()) {
-            101 -> {characteristicValues[gatt.device] = BleStruct(characteristicByteArray[0].toInt(), characteristicByteArray[0].toFloat())}
+            101 -> {
+                characteristicValues[gatt] = BleStruct(
+                    characteristicByteArray[0].toInt(),
+                    characteristicByteArray[0].toFloat()
+                )
+            }
+
             1 -> {
-                pressure = countPressure(characteristicByteArray)
-                characteristicValues[gatt.device] =
+                pressure = (countPressure(characteristicByteArray, atmospherePressure) / divider)
+                characteristicValues[gatt] =
                     BleStruct(characteristicByteArray[0].toInt(), pressure)
             }
+
             2 -> {
-                pressure = countPressure(characteristicByteArray)
+                pressure = (countPressure(characteristicByteArray, atmospherePressure) / divider)
                 temp = countTemp(characteristicByteArray)
-                characteristicValues[gatt.device] =
+                characteristicValues[gatt] =
                     BleStruct(characteristicByteArray[0].toInt(), pressure, temp)
             }
+
             3 -> {
-                pressure = countPressure(characteristicByteArray)
+                pressure = (countPressure(characteristicByteArray, atmospherePressure) / divider)
                 temp = countTemp(characteristicByteArray)
                 val humidity = countHum(characteristicByteArray)
-                characteristicValues[gatt.device] =
+                characteristicValues[gatt] =
                     BleStruct(characteristicByteArray[0].toInt(), pressure, temp, humidity)
-            } else -> {
-                characteristicValues[gatt.device] =
+            }
+
+            else -> {
+                characteristicValues[gatt] =
                     BleStruct(characteristicByteArray[0].toInt())
             }
         }
         Log.i(
             "onCharacteristicChanged",
-            "Device ${gatt.device.name}, Characteristic: ${characteristic.uuid}, Pressure: $pressure, Temperature: $temp"
+            "Device ${gatt.device.name}, Pressure: $pressure, Temperature: $temp"
         )
-        notifyChanged()
     }
 
-    private fun countPressure(byteArray: ByteArray): Float {
-        return ((((byteArray[4].toInt() and 0xff) shl 8) + (byteArray[3].toInt() and 0xff)) shl 8) + (byteArray[2].toInt() and 0xff).toFloat()
+    private fun countPressure(byteArray: ByteArray, atmospherePressure: Float = 0f): Float {
+        return abs(((((byteArray[4].toInt() and 0xff) shl 8) + (byteArray[3].toInt() and 0xff)) shl 8) + (byteArray[2].toInt() and 0xff).toFloat() - atmospherePressure)
     }
 
     private fun countTemp(byteArray: ByteArray): Float {
-        return (((byteArray[6].toInt() and 0xff) shl 8) + (byteArray[5].toInt() and 0xff) ) / 100f
+        return (((byteArray[6].toInt() and 0xff) shl 8) + (byteArray[5].toInt() and 0xff)) / 100f
     }
 
     private fun countHum(byteArray: ByteArray): Float {
-        return ((byteArray[8].toInt() and 0xff) shl 8) + (byteArray[7].toInt() and 0xff).toFloat()
+        return (((byteArray[8].toInt() and 0xff) shl 8) + (byteArray[7].toInt() and 0xff)) / 1000f
     }
 
     // старт сканирования устройств
@@ -249,7 +284,7 @@ class BleModel : Observable() {
     }
 
     // отключение доступа к уведомлениям с BLE устройства
-    private fun disableNotification(
+    fun disableNotification(
         characteristic: BluetoothGattCharacteristic,
         gatt: BluetoothGatt
     ) {
@@ -330,6 +365,7 @@ class BleModel : Observable() {
                 endOfOperation()
                 Log.i("Operation", "Disconnect device: ${operation.device.name}")
             }
+
             is EnableNotification -> {
                 with(operation) {
                     val cccDescriptorUUID = UUID.fromString(USER_DESCRIPTOR_UUID)
@@ -353,6 +389,7 @@ class BleModel : Observable() {
                     }
                 }
             }
+
             is DisableNotification -> {
                 with(operation) {
                     val cccDescriptorUUID = UUID.fromString(USER_DESCRIPTOR_UUID)
@@ -362,12 +399,17 @@ class BleModel : Observable() {
                             endOfOperation()
                             return
                         }
+                        Log.i(
+                            "DisableNotification",
+                            "Device: $device is disabled notification"
+                        )
                         cccDescriptor.value = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE
                         gatt.writeDescriptor(cccDescriptor)
                         endOfOperation()
                     }
                 }
             }
+
             is WriteChar -> {
                 with(operation) {
                     val writeType = when {
@@ -387,6 +429,7 @@ class BleModel : Observable() {
                     endOfOperation()
                 }
             }
+
             else -> {
                 endOfOperation()
                 return
@@ -414,7 +457,11 @@ class BleModel : Observable() {
     }
 
     companion object {
+        const val EXTERNAL_SENSOR = "EnvSensAtm"
+        const val INNER_SENSOR = "EnvSens"
         const val SCAN_ERROR = "SCAN ERROR"
+        const val DIVIDER_FOR_MILIBARS = 100000000f
+        const val DIVIDER_FOR_MM_HG = 133.32f
         const val USER_DESCRIPTOR_UUID = "00002902-0000-1000-8000-00805f9b34fb"
         const val USER_UUID_STM = "00002a37-0000-1000-8000-00805f9b34fb"
         const val USER_UUID_P2P = "0000fe41-8e22-4541-9d4c-21edae82ed19"
